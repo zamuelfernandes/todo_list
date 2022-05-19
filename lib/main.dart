@@ -20,8 +20,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List _toDoList = [];
-  Color baseColor = Colors.purpleAccent;
+  List _toDoList = ["Daniel", "Marcos"];
+  Color baseColor = Colors.blueGrey;
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +45,36 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                 ),
-                RaisedButton(
-                  onPressed: () {},
-                  color: baseColor,
-                  child: Text('ADD'),
-                  textColor: Colors.white,
+                const SizedBox(width: 10),
+                ClipRRect(
+                  //borderRadius: BorderRadius.circular(20),
+                  child: RaisedButton(
+                    onPressed: () {},
+                    color: baseColor,
+                    child: Text('ADD'),
+                    textColor: Colors.white,
+                  ),
                 ),
               ],
             ),
           ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.only(top: 10),
+              itemCount: _toDoList.length,
+              itemBuilder: (context, index) {
+                return CheckboxListTile(
+                  onChanged: () {},
+                  title: Text(_toDoList[index]["title"]),
+                  value: _toDoList[index]["ok"],
+                  secondary: CircleAvatar(
+                    child: Icon(
+                        _toDoList[index]["ok"] ? Icons.check : Icons.error),
+                  ),
+                );
+              },
+            ),
+          )
         ],
       ),
     );
