@@ -25,6 +25,23 @@ class _HomeState extends State<Home> {
 
   final TextEditingController _newTaskController = TextEditingController();
 
+  late Map<String, dynamic> _lastRemoved;
+  late int _lastRemovedPos;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    //Chama o _readData, e depois de um await passa pro then
+    _readData().then((data) {
+      setState(() {
+        _toDoList = json.decode(data);
+      });
+    });
+  }
+
+  //ADD TASK FUNCTION ----------------------------------------------------------
   void _addTask() {
     setState(() {
       Map<String, dynamic> newToDo = Map();
@@ -32,6 +49,7 @@ class _HomeState extends State<Home> {
       _newTaskController.text = '';
       newToDo["ok"] = false;
       _toDoList.add(newToDo);
+      _saveData();
     });
   }
 
@@ -66,8 +84,8 @@ class _HomeState extends State<Home> {
                   child: RaisedButton(
                     onPressed: _addTask,
                     color: baseColor,
-                    child: Text('ADD'),
                     textColor: Colors.white,
+                    child: const Text('ADD'),
                   ),
                 ),
               ],
@@ -76,22 +94,9 @@ class _HomeState extends State<Home> {
           //LIST VIEW ----------------------------------------------------------
           Expanded(
             child: ListView.builder(
-              padding: EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.only(top: 10),
               itemCount: _toDoList.length,
-              itemBuilder: (context, index) {
-                return CheckboxListTile(
-                    title: Text(_toDoList[index]["title"]),
-                    value: _toDoList[index]["ok"],
-                    secondary: CircleAvatar(
-                      child: Icon(
-                          _toDoList[index]["ok"] ? Icons.check : Icons.error),
-                    ),
-                    onChanged: (status) {
-                      setState(() {
-                        _toDoList[index]["ok"] = status;
-                      });
-                    });
-              },
+              itemBuilder: buildItem,
             ),
           )
         ],
@@ -122,5 +127,66 @@ class _HomeState extends State<Home> {
     } catch (e) {
       return null;
     }
+  }
+
+  //BUILD EACH ITEM ----------------------------------------------------
+  Widget buildItem(context, index) {
+    return Dismissible(
+      //Key para identificação específica de cada item
+      key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
+      background: Container(
+        color: Colors.red,
+        child: const Align(
+          alignment: Alignment(-0.9, 0.0),
+          child: Icon(
+            Icons.delete,
+            color: Colors.white,
+          ),
+        ),
+      ),
+      direction: DismissDirection.startToEnd,
+      child: CheckboxListTile(
+          activeColor: baseColor,
+          title: Text(_toDoList[index]["title"]),
+          value: _toDoList[index]["ok"],
+          secondary: CircleAvatar(
+            backgroundColor: baseColor,
+            child: Icon(
+              _toDoList[index]["ok"] ? Icons.check : Icons.error,
+              color: Colors.white,
+            ),
+          ),
+          onChanged: (status) {
+            setState(() {
+              _toDoList[index]["ok"] = status;
+              _saveData();
+            });
+          }),
+      onDismissed: (direction) {
+        setState(() {
+          _lastRemoved = Map.from(_toDoList[index]);
+          _lastRemovedPos = index;
+          _toDoList.removeAt(index);
+
+          _saveData();
+
+          final snack = SnackBar(
+            content: Text('Task "${_lastRemoved['title']}" removed'),
+            action: SnackBarAction(
+              label: 'Desfazer',
+              onPressed: () {
+                setState(() {
+                  _toDoList.insert(_lastRemovedPos, _lastRemoved);
+                  _saveData();
+                });
+              },
+            ),
+            duration: const Duration(seconds: 2),
+          );
+
+          Scaffold.of(context).showSnackBar(snack);
+        });
+      },
+    );
   }
 }
