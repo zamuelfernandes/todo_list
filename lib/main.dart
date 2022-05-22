@@ -186,14 +186,16 @@ class _HomeState extends State<Home> {
             duration: const Duration(seconds: 2),
           );
 
+          Scaffold.of(context).removeCurrentSnackBar();
           Scaffold.of(context).showSnackBar(snack);
         });
       },
     );
   }
 
+  //SORT THE ITEMS -------------------------------------------------------
   Future<Null> _refresh() async {
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
 
     setState(() {
       _toDoList.sort((a, b) {
